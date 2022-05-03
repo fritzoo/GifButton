@@ -40,18 +40,28 @@ void setup() {
 void loop() {
   Serial.println(buttonState);
   if (digitalRead(beerPin) == LOW){
-    sendMessage("beer");
+    sendMessage();
   }
 }
 
 
-void sendMessage(String type) {
+void sendMessage() {
   timeClient.update();
 
   if ((WiFiMulti.run() == WL_CONNECTED)) {
 
-    String datetime = GetCurrentDateTime();
-    String url1 = "https://prod-41.westeurope.logic.azure.com/workflows/b8750ce167b64a9aadae15b5321ecf4c/triggers/manual/paths/invoke/" + type;
+    int hour = timeClient.getHours();
+    String type = "beer";
+
+    Serial.println(String(hour));
+    
+    if (hour < 12) {
+      type = "coffee";
+    } else if (hour == 12) {
+      type = "lunch";
+    }
+
+    String url1 = "https://prod-41.westeurope.logic.azure.com/workflows/b8750ce167b64a9aadae15b5321ecf4c/triggers/manual/paths/invoke/" + String(hour);
     String url2 = "?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Rd2ROwC0idCELODFpUKz1ZtZmCH-vIdc-hUEdlU6hIM";
     String request = url1 + url2;
 
@@ -87,14 +97,4 @@ void sendMessage(String type) {
       Serial.printf("[HTTPS] Unable to connect\n");
     }
   }
-}
-
-String GetCurrentDateTime()
-{
-
-  timeClient.update();
-  String value = String(timeClient.getEpochTime());
-
-
-  return value;
 }
